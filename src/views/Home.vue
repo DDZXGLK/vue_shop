@@ -4,91 +4,41 @@
     <el-header>
       <img src="../assets/img/logo.png" />
       <h2>Vue2后台管理系统</h2>
-      <el-button  @click="loginOut">退出</el-button>
+      <el-button @click="loginOut">退出</el-button>
     </el-header>
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside width="200px">
-        <el-menu background-color="#f1f2f6" active-text-color="#3c40c6" unique-opened>
-          <el-submenu index="1">
+      <el-aside :width="menuWidth">
+        <div class="flexible" @click="flexed()">
+          <i :class="iconClassName"></i>
+        </div>
+        <el-menu
+          background-color="#f1f2f6"
+          active-text-color="#3c40c6"
+          unique-opened
+          router
+          :collapse="collapse"
+          :collapse-transition="false"
+        >
+          <!-- 一级菜单 -->
+          <el-submenu
+            :index="'/' + menu.path"
+            v-for="menu in menuList"
+            :key="menu.id"
+          >
             <template slot="title">
-              <i class="el-icon-user-solid"></i>
-              <span>用户管理</span>
+              <i :class="iconObj[menu.id]"></i>
+              <span>{{ menu.authName }}</span>
             </template>
-            <el-menu-item index="1-1">
+            <!-- 二级菜单 -->
+            <el-menu-item
+              :index="'/' + menuItem.path"
+              v-for="menuItem in menu.children"
+              :key="menuItem.id"
+            >
               <template slot="title">
                 <i class="el-icon-menu"></i>
-                <span>用户列表</span>
-              </template>
-            </el-menu-item>
-          </el-submenu>
-
-          <el-submenu index="2">
-            <template slot="title">
-              <i class="el-icon-s-tools"></i>
-              <span>权限管理</span>
-            </template>
-            <el-menu-item index="2-1">
-              <template slot="title">
-                <i class="el-icon-menu"></i>
-                <span>角色列表</span>
-              </template>
-            </el-menu-item>
-            <el-menu-item index="2-2">
-              <template slot="title">
-                <i class="el-icon-menu"></i>
-                <span>权限列表</span>
-              </template>
-            </el-menu-item>
-          </el-submenu>
-
-          <el-submenu index="3">
-            <template slot="title">
-              <i class="el-icon-s-goods"></i>
-              <span>商品管理</span>
-            </template>
-            <el-menu-item index="3-1">
-              <template slot="title">
-                <i class="el-icon-menu"></i>
-                <span>商品列表</span>
-              </template>
-            </el-menu-item>
-            <el-menu-item index="3-2">
-              <template slot="title">
-                <i class="el-icon-menu"></i>
-                <span>分类参数</span>
-              </template>
-            </el-menu-item>
-            <el-menu-item index="3-3">
-              <template slot="title">
-                <i class="el-icon-menu"></i>
-                <span>商品分类</span>
-              </template>
-            </el-menu-item>
-          </el-submenu>
-
-          <el-submenu index="4">
-            <template slot="title">
-              <i class="el-icon-s-order"></i>
-              <span>订单管理</span>
-            </template>
-            <el-menu-item index="4-1">
-              <template slot="title">
-                <i class="el-icon-menu"></i>
-                <span>订单列表</span>
-              </template>
-            </el-menu-item>
-          </el-submenu>
-
-          <el-submenu index="5">
-            <template slot="title">
-              <i class="el-icon-s-platform"></i>
-              <span>数据统计</span>
-            </template>
-            <el-menu-item index="5-1">
-              <template slot="title">
-                <i class="el-icon-menu"></i>
-                <span>数据报表</span>
+                <span>{{ menuItem.authName }}</span>
               </template>
             </el-menu-item>
           </el-submenu>
@@ -96,7 +46,9 @@
       </el-aside>
       <el-container>
         <!-- 内容区 -->
-        <el-main>Main</el-main>
+        <el-main>
+          <router-view></router-view>
+        </el-main>
       </el-container>
     </el-container>
   </el-container>
@@ -104,14 +56,56 @@
 
 <script>
 export default {
+  name: 'home',
   data() {
-    return {}
+    return {
+      // 菜单列表
+      menuList: '',
+      // 菜单图标
+      iconObj: {
+        125: 'el-icon-user',
+        103: 'el-icon-setting',
+        101: 'el-icon-goods',
+        102: 'el-icon-s-order',
+        145: 'el-icon-s-platform',
+      },
+      // 菜单伸缩图标
+      iconFlag: false,
+      iconClassName: 'el-icon-s-unfold',
+      // 菜单是否折叠属性
+      collapse: false,
+      // 菜单长度
+      menuWidth: '200px',
+    }
   },
   methods: {
+    // 退出登录
     loginOut() {
       window.sessionStorage.clear('token')
       this.$router.push('/')
     },
+    // 获取菜单列表
+    async getMenu() {
+      const { data } = await this.$request.get('/menus')
+      if (data.meta.status !== 200) return this.$message.error(data.meta.msg)
+      this.menuList = data.data
+    },
+    // 菜单栏伸缩
+    flexed() {
+      this.iconFlag = !this.iconFlag
+      if (this.iconFlag) {
+        this.iconClassName = 'el-icon-s-fold'
+        this.collapse = true
+        this.menuWidth = '64px'
+      } else {
+        this.iconClassName = 'el-icon-s-unfold'
+        this.collapse = false
+        this.menuWidth = '200px'
+      }
+    },
+  },
+  created() {
+    this.getMenu()
   },
 }
 </script>
@@ -142,14 +136,26 @@ export default {
 
 .el-aside {
   background-color: #fff;
-  color: #333;
-  text-align: center;
+
+  .flexible {
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    font-size: 25px;
+    cursor: pointer;
+  }
+
+  i {
+    line-height: 30px;
+  }
 }
 
 .el-main {
   background-image: url(https://flatuicolors.com/static/img/stars-opacity.0979c1.svg);
   background-color: #3c40c6;
-  color: #333;
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
   text-align: center;
   line-height: 160px;
 }
