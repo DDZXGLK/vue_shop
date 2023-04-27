@@ -68,9 +68,9 @@ export default {
           {
             required: true,
             type: 'string',
-            min: 3,
+            min: 2,
             max: 15,
-            message: '请输入3~15位的用户名！',
+            message: '请输入2~15位的用户名！',
             trigger: 'blur',
           },
         ],

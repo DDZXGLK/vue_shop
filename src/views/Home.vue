@@ -15,6 +15,7 @@
         <el-menu
           background-color="#f1f2f6"
           active-text-color="#3c40c6"
+          :default-active="defaultActive"
           unique-opened
           router
           :collapse="collapse"
@@ -35,6 +36,7 @@
               :index="'/' + menuItem.path"
               v-for="menuItem in menu.children"
               :key="menuItem.id"
+              @click="saveNavState(menuItem.path)"
             >
               <template slot="title">
                 <i class="el-icon-menu"></i>
@@ -71,11 +73,13 @@ export default {
       },
       // 菜单伸缩图标
       iconFlag: false,
-      iconClassName: 'el-icon-s-unfold',
+      iconClassName: 'el-icon-s-fold',
       // 菜单是否折叠属性
       collapse: false,
       // 菜单长度
       menuWidth: '200px',
+      // 默认激活的菜单
+      defaultActive: '',
     }
   },
   methods: {
@@ -94,18 +98,24 @@ export default {
     flexed() {
       this.iconFlag = !this.iconFlag
       if (this.iconFlag) {
-        this.iconClassName = 'el-icon-s-fold'
+        this.iconClassName = 'el-icon-s-unfold'
         this.collapse = true
         this.menuWidth = '64px'
       } else {
-        this.iconClassName = 'el-icon-s-unfold'
+        this.iconClassName = 'el-icon-s-fold'
         this.collapse = false
         this.menuWidth = '200px'
       }
     },
+    // 保存二级菜单的点击状态
+    saveNavState(path) {
+      window.sessionStorage.setItem('navPath', '/' + path)
+      this.defaultActive = '/' + path
+    },
   },
   created() {
     this.getMenu()
+    this.defaultActive = window.sessionStorage.getItem('navPath')
   },
 }
 </script>
@@ -153,11 +163,6 @@ export default {
 .el-main {
   background-image: url(https://flatuicolors.com/static/img/stars-opacity.0979c1.svg);
   background-color: #3c40c6;
-  color: #fff;
-  font-size: 20px;
-  font-weight: bold;
-  text-align: center;
-  line-height: 160px;
 }
 
 body > .el-container {
